@@ -95,31 +95,60 @@ export async function getLatestInterviews(
 ): Promise<Interview[] | null> {
   const { userId, limit = 20 } = params;
 
-  const interviews = await db
-    .collection("interviews")
-    .orderBy("createdAt", "desc")
-    .where("finalized", "==", true)
-    .where("userId", "!=", userId)
-    .limit(limit)
-    .get();
+  try {
+    const interviews = await db
+      .collection("interviews")
+      .where("finalized", "==", true)
+      .where("userId", "!=", userId)
+      .get();
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+    // Sort the results in memory instead of using orderBy
+    const sortedInterviews = interviews.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Interview))
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA; // Sort in descending order
+      })
+      .slice(0, limit); // Apply limit after sorting
+
+    return sortedInterviews;
+  } catch (error) {
+    console.error("Error fetching latest interviews:", error);
+    return null;
+  }
 }
 
 export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
-  const interviews = await db
-    .collection("interviews")
-    .where("userId", "==", userId)
-    .orderBy("createdAt", "desc")
-    .get();
+  try {
+    // Modified query that doesn't require composite index
+    const interviews = await db.collection("interviews")
+      .where("finalized", "==", true)
+      .get();
+    
+    // Then filter out the current user's interviews in memory
+    const filteredInterviews = interviews.docs.filter(doc => doc.data().userId !== userId);
 
-  return interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+    // Sort the results in memory instead of using orderBy
+    const sortedInterviews = interviews.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Interview))
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA; // Sort in descending order
+      });
+
+    return sortedInterviews;
+  } catch (error) {
+    console.error("Error fetching interviews:", error);
+    return null;
+  }
 }

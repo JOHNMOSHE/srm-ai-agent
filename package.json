@@ -18,7 +18,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
-    "firebase": "^11.4.0",
+    "firebase": "^11.6.0",
     "firebase-admin": "^13.2.0",
     "lucide-react": "^0.482.0",
     "next": "15.2.2",
@@ -29,6 +29,7 @@
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "vapi-web": "^1.0.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
